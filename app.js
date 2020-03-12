@@ -9,11 +9,12 @@ app.use(express.static(path.join(__dirname, 'public')))
 app.use('/', indexRouter)
 
 const WebSocket = require('ws')
-const wss = new WebSocket.Server({ port: 4000 })
-let data = []
+const wsport = process.env.WSPORT ? process.env.WSPORT : 4000
+
+const wss = new WebSocket.Server({ port: wsport })
+
 wss.on('connection', connection = ws => {
   ws.on('message', incoming = message => {
-    data.push(JSON.parse(message))
     console.log(data)
     wss.clients.forEach(function each(client) {
       if (client.readyState === WebSocket.OPEN) {
