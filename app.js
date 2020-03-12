@@ -15,7 +15,6 @@ const wss = new WebSocket.Server({ port: wsport })
 
 wss.on('connection', connection = ws => {
   ws.on('message', incoming = message => {
-    console.log(data)
     wss.clients.forEach(function each(client) {
       if (client.readyState === WebSocket.OPEN) {
         client.send(message)
