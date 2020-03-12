@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     defaultView: 'listWeek'
   })
   calendar.render()
-  const socketProtocol = (window.location.protocol === 'https:' ? 'wss:' : 'ws:')
+  const socketProtocol = 'ws:' //(window.location.protocol === 'https:' ? 'wss:' : 'ws:')
   const echoSocketUrl = `${socketProtocol}//${window.location.hostname}/echo/`
   const socket = new WebSocket(echoSocketUrl)
   socket.onopen = () => {
