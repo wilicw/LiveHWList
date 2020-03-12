@@ -9,7 +9,7 @@ app.use(express.static(path.join(__dirname, 'public')))
 app.use('/', indexRouter)
 
 const WebSocket = require('ws')
-const wsport = process.env.WSPORT ? process.env.WSPORT : 4000
+const wsport = process.env.WSPORT ? process.env.WSPORT : 27017
 
 const wss = new WebSocket.Server({ port: wsport })
 

@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
   })
   calendar.render()
   const socketProtocol = (window.location.protocol === 'https:' ? 'wss:' : 'ws:')
-  const echoSocketUrl = `${socketProtocol}//${window.location.hostname}/echo/`
+  const echoSocketUrl = `${socketProtocol}//${window.location.hostname}:27017/echo/`
   const socket = new WebSocket(echoSocketUrl)
   socket.onopen = () => {
     console.log("Success")
