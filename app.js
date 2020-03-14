@@ -57,7 +57,6 @@ wss.on('connection', connection = ws => {
               client.send(JSON.stringify(data))
             }
           })
-          ws.send({methods: "nothing"})
         })
       })
     } else if (data.methods === "get") {
