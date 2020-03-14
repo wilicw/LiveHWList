@@ -26,6 +26,7 @@ const wss = new WebSocket.Server({ port: wsport })
 wss.on('connection', connection = ws => {
   ws.on('message', incoming = message => {
     let data = JSON.parse(message)
+    console.log(data)
     if (data.methods === "add") {
       const title = data.title
       const time = new Date(data.time).getTime()
@@ -36,7 +37,6 @@ wss.on('connection', connection = ws => {
         db.each(`SELECT * from admins where key LIKE "${key}"`, (err, row) => {
           let admin = row.name
           console.log(admin)
-          
           let stmt = db.prepare(`INSERT INTO lists ('title', 'subject', 'tags', 'time', 'admin') VALUES (?,?,?,?,?)`)
           stmt.run(title, subject, tags, time, admin)
           wss.clients.forEach(function each(client) {
