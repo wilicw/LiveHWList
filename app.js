@@ -36,7 +36,7 @@ wss.on('connection', connection = ws => {
       db.serialize(() => {
         db.each(`SELECT * from admins where key LIKE "${key}"`, (err, row) => {
           if (err) {
-            console.log(err)
+            return console.error(err)
           }
           let admin = row.name
           console.log(admin)
@@ -57,6 +57,7 @@ wss.on('connection', connection = ws => {
               client.send(JSON.stringify(data))
             }
           })
+          ws.send({methods: "nothing"})
         })
       })
     } else if (data.methods === "get") {
