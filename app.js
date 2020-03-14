@@ -35,6 +35,9 @@ wss.on('connection', connection = ws => {
       const tags = data.tags.join(",")
       db.serialize(() => {
         db.each(`SELECT * from admins where key LIKE "${key}"`, (err, row) => {
+          if (err) {
+            console.log(err)
+          }
           let admin = row.name
           console.log(admin)
           let stmt = db.prepare(`INSERT INTO lists ('title', 'subject', 'tags', 'time', 'admin') VALUES (?,?,?,?,?)`)
