@@ -1,7 +1,7 @@
 let Calendar = document.getElementById('calendar')
 
 const socketProtocol = (window.location.protocol === 'https:' ? 'wss:' : 'ws:')
-const echoSocketUrl = `${socketProtocol}//${window.location.hostname}/echo/`
+const echoSocketUrl = `${socketProtocol}//${window.location.hostname}:4000/echo/`
 const socket = new WebSocket(echoSocketUrl)
 
 let items = []
@@ -45,32 +45,49 @@ const getSubjectByid = (id) => {
   return result[0].name
 }
 
-const generateItem = (title, time, subject, tags) => {
-  let item = document.createElement('div')
-  item.classList.add('item_card')
+const generateItem = (id, title, time, subject, tags) => {
+  let card = document.createElement('div')
+  card.classList.add('item_card')
+  card.setAttribute('id', `card${id}`)
+
+  let left_block = document.createElement('div')
+  left_block.classList.add('left_block')
+
   let titleElem = document.createElement('p')
   titleElem.classList.add('item_title')
-  titleElem.innerHTML = `<span>${dateToString(time)}</span> ${title}`
+  titleElem.setAttribute('id', `title${id}`)
+  titleElem.innerHTML = title
 
   let subjectElem = document.createElement('span')
   subjectElem.innerHTML = getSubjectByid(subject)
 
   let tagsElem = document.createElement('span')
   tagsElem.classList.add('tags')
-  
   let dot = document.createElement('span')
   dot.classList.add('tags')
   tags = getTagsByid(tags)
   dot.innerText = tags.name
   tagsElem.appendChild(dot)
-  
-  item.setAttribute('style', `border-left: 3px solid ${tags.color};`)
 
-  item.appendChild(titleElem)
-  item.appendChild(subjectElem)
-  item.appendChild(tagsElem)
-  // item.appendChild(dateTitle)
-  return item
+  left_block.appendChild(titleElem)
+  left_block.appendChild(subjectElem)
+  left_block.appendChild(tagsElem)
+  
+  let icons_group = document.createElement('div')
+  icons_group.classList.add('icon_group')
+  
+  let icon = document.createElement('span')
+  icon.classList.add('iconify')
+  icon.setAttribute('data-icon', 'mdi-bell-ring-outline')
+  icon.setAttribute('data-inline', 'false')
+  icon.setAttribute('id', `checkbox${id}`)
+  icons_group.appendChild(icon)
+
+  card.setAttribute('style', `border-left: 5px solid ${tags.color};`)
+  card.append(left_block)
+  card.append(icons_group)
+
+  return card
 }
 
 const render = () => {
@@ -103,7 +120,7 @@ const render = () => {
       Calendar.appendChild(titleElem)
       dateTitle = dT
     }
-    Calendar.appendChild(generateItem(item.title, item.time, item.subject, item.tags))
+    Calendar.appendChild(generateItem(item.id, item.title, item.time, item.subject, item.tags))
   })
 }
 const initNav = () => {

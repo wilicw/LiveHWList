@@ -32,13 +32,14 @@ body {
 }
 
 .item_card {
+  display: flex;
   border-radius: 9px;
   margin: 1em;
   padding: 1em;
   padding-left: 30px;
   padding-bottom: 30px;
   box-shadow: var(--main-shadow);
-  vertical-align: middle;
+  justify-content: space-between
 }
 
 .item_card span {
@@ -102,9 +103,23 @@ nav p {
   font-size: 18pt;
   font-weight: 200;
   color: #AAAAAA;
+  margin-top: 30vh;
+  margin-bottom: 30vh;
 }
 
 .dateTitle {
   font-size: 15pt;
   margin-left: .8em;
+}
+
+.icon_group {
+  width: 50px;
+}
+
+.icon_group .iconify {
+  cursor: pointer;
+  width: 20px;
+  height: auto;
+  margin-top: 40px;
+  color: #CCCCCC;
 }
