@@ -103,3 +103,8 @@ nav p {
   font-weight: 200;
   color: #AAAAAA;
 }
+
+.dateTitle {
+  font-size: 15pt;
+  margin-left: .8em;
+}

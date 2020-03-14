@@ -1,7 +1,7 @@
 let Calendar = document.getElementById('calendar')
 
 const socketProtocol = (window.location.protocol === 'https:' ? 'wss:' : 'ws:')
-const echoSocketUrl = `${socketProtocol}//${window.location.hostname}/echo/`
+const echoSocketUrl = `${socketProtocol}//${window.location.hostname}:4000/echo/`
 const socket = new WebSocket(echoSocketUrl)
 
 let items = []
@@ -17,12 +17,19 @@ const pad = (n) => {
     return n
   }
 }
+
 let today = new Date();
 let dd = pad(today.getDate())
 let mm = pad(today.getMonth()+1)
 let yyyy = today.getFullYear()
 today = new Date(`${yyyy}-${mm}-${dd} 00:00:00`).getTime()
 let range = [today, today+86400000]
+
+const dateToString = (time) => {
+  let date = new Date(time)
+  date = `${date.getMonth()+1}/${date.getDate()}`
+  return date
+}
 
 const getTagsByid = (id) => {
   let result = tags.filter(tag => {
@@ -39,14 +46,11 @@ const getSubjectByid = (id) => {
 }
 
 const generateItem = (title, time, subject, tags) => {
-  let date = new Date(time)
-  date = `${date.getMonth()+1}/${date.getDate()}`
-
   let item = document.createElement('div')
   item.classList.add('item_card')
   let titleElem = document.createElement('p')
   titleElem.classList.add('item_title')
-  titleElem.innerHTML = `<span>${date}</span> ${title}`
+  titleElem.innerHTML = `<span>${dateToString(time)}</span> ${title}`
 
   let subjectElem = document.createElement('span')
   subjectElem.innerHTML = getSubjectByid(subject)
@@ -87,8 +91,18 @@ const render = () => {
     nothing.classList.add('nothing')
     nothing.innerText = "Nothing today."
     Calendar.appendChild(nothing)
+    return
   }
+  let dateTitle = ""
   filtered.map(item => {
+    dT = dateToString(item.time)
+    if (dT !== dateTitle) {
+      let titleElem = document.createElement('p')
+      titleElem.classList.add('dateTitle')
+      titleElem.innerText = dT
+      Calendar.appendChild(titleElem)
+      dateTitle = dT
+    }
     Calendar.appendChild(generateItem(item.title, item.time, item.subject, item.tags))
   })
 }
