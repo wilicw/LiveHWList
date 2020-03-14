@@ -1,7 +1,7 @@
 let Calendar = document.getElementById('calendar')
 
 const socketProtocol = (window.location.protocol === 'https:' ? 'wss:' : 'ws:')
-const echoSocketUrl = `${socketProtocol}//${window.location.hostname}/echo/`
+const echoSocketUrl = `${socketProtocol}//${window.location.hostname}:4000/echo/`
 const socket = new WebSocket(echoSocketUrl)
 
 let items = []
@@ -82,6 +82,14 @@ const generateItem = (id, title, time, subject, tags) => {
   icon.setAttribute('data-inline', 'false')
   icon.setAttribute('id', `checkbox${id}`)
   icons_group.appendChild(icon)
+
+  icons_group.addEventListener('click', e => {
+    if (window.Notification) {
+      Notification.requestPermission(status => {
+        console.log('Status of the request:', status);
+      })
+    }
+  })
 
   card.setAttribute('style', `border-left: 5px solid ${tags.color};`)
   card.append(left_block)
@@ -177,9 +185,9 @@ const initNav = () => {
 
 const initWS = () => {
   socket.onopen = () => {
-    socket.send(JSON.stringify({methods: "get"}))
     socket.send(JSON.stringify({methods: "gettags"}))
     socket.send(JSON.stringify({methods: "getsubject"}))
+    socket.send(JSON.stringify({methods: "get"}))
     console.log("Success")
   }
   socket.onmessage = (msg) => {
