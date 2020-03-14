@@ -42,6 +42,7 @@ wss.on('connection', connection = ws => {
           console.log(admin)
           let stmt = db.prepare(`INSERT INTO lists ('title', 'subject', 'tags', 'time', 'admin') VALUES (?,?,?,?,?)`)
           stmt.run(title, subject, tags, time, admin)
+          ws.send(200)
           wss.clients.forEach(function each(client) {
             if (client.readyState === WebSocket.OPEN) {
               let data = {
