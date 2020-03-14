@@ -3,7 +3,7 @@
   "short_name": "HW List",
   "theme_color": "#282e79",
   "background_color": "#f5f5f6",
-  "display": "browser",
+  "display": "standalone",
   "Scope": "/",
   "start_url": "/",
   "icons": [
