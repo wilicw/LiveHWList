@@ -80,6 +80,26 @@ wss.on('connection', connection = ws => {
           ws.send(JSON.stringify(response))
         })
       })
+    } else if (data.methods === "gettags") {
+      db.serialize(() => {
+        db.all(`SELECT * from tags`, (err, rows) => {
+          let response = {
+            type: "tags",
+            data: rows
+          }
+          ws.send(JSON.stringify(response))
+        })
+      })
+    } else if (data.methods === "getsubject") {
+      db.serialize(() => {
+        db.all(`SELECT * from subject`, (err, rows) => {
+          let response = {
+            type: "subject",
+            data: rows
+          }
+          ws.send(JSON.stringify(response))
+        })
+      })
     }
   })
 })

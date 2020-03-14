@@ -74,12 +74,16 @@ nav p {
 #add {
   text-align: center;
 }
-#add input {
+#add input, #add select{
   width: 90%;
   border: 0;
   padding: 10px;
   border-radius: 3px;
+  background-color: white;
   box-shadow: var(--min-shadow);
+}
+#add select{
+  width: 95%;
 }
 
 #add button {
@@ -91,4 +95,11 @@ nav p {
   cursor: pointer;
   background-color: var(--primary);
   box-shadow: var(--main-shadow);
+}
+
+.nothing {
+  text-align: center;
+  font-size: 18pt;
+  font-weight: 200;
+  color: #AAAAAA;
 }
