@@ -1,7 +1,7 @@
 let Calendar = document.getElementById('calendar')
 
 const socketProtocol = (window.location.protocol === 'https:' ? 'wss:' : 'ws:')
-const echoSocketUrl = `${socketProtocol}//${window.location.hostname}/echo/`
+const echoSocketUrl = `${socketProtocol}//${window.location.hostname}:4000/echo/`
 const socket = new WebSocket(echoSocketUrl)
 
 let items = []
@@ -57,9 +57,12 @@ const generateItem = (title, time, subject, tags) => {
   
   let dot = document.createElement('span')
   dot.classList.add('tags')
-  dot.innerText = getTagsByid(tags).name
+  tags = getTagsByid(tags)
+  dot.innerText = tags.name
   tagsElem.appendChild(dot)
-    
+  
+  item.setAttribute('style', `border-left: 3px solid ${tags.color};`)
+
   item.appendChild(titleElem)
   item.appendChild(subjectElem)
   item.appendChild(tagsElem)
