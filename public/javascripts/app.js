@@ -89,7 +89,7 @@ const render = () => {
   if (filtered.length === 0) {
     let nothing = document.createElement('p')
     nothing.classList.add('nothing')
-    nothing.innerText = "Nothing today."
+    nothing.innerText = "Nothing."
     Calendar.appendChild(nothing)
     return
   }
@@ -107,19 +107,22 @@ const render = () => {
   })
 }
 const initNav = () => {
-  document.getElementById('today').addEventListener('click', e => {
+  let inactive = () => {
+    Calendar.classList.add('active')
+    document.getElementById('add').classList.remove('active')
     Array.from(nav.children).forEach(elem => {
       elem.classList.remove('active')
     })
+  }
+  document.getElementById('today').addEventListener('click', e => {
+    inactive()
     e.srcElement.classList.add('active')
     range = [today, today+86400000]
     render()
   })
 
   document.getElementById('tomorrow').addEventListener('click', e => {
-    Array.from(nav.children).forEach(elem => {
-      elem.classList.remove('active')
-    })
+    inactive()
     e.srcElement.classList.add('active')
     Calendar.innerHTML = ""
     range = [today+86400000, today+2*86400000]
@@ -127,9 +130,7 @@ const initNav = () => {
   })
 
   document.getElementById('all').addEventListener('click', e => {
-    Array.from(nav.children).forEach(elem => {
-      elem.classList.remove('active')
-    })
+    inactive()
     e.srcElement.classList.add('active')
     Calendar.innerHTML = ""
     range = [today, 0]
