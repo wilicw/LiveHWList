@@ -123,3 +123,10 @@ nav p {
   margin-top: 40px;
   color: #CCCCCC;
 }
+
+@media only screen and (min-width: 800px) {
+  #calendar, #add {
+    margin: 0 auto;
+    width: 800px;
+  }
+}
