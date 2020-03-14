@@ -30,7 +30,7 @@ wss.on('connection', connection = ws => {
     if (data.methods === "add") {
       const title = data.title
       const time = new Date(data.time).getTime()
-      const key = String(md5(data.key))
+      const key = data.key
       const subject = data.subject
       const tags = data.tags.join(",")
       db.serialize(() => {
@@ -38,12 +38,10 @@ wss.on('connection', connection = ws => {
           if (err) {
             return console.error(err)
           }
-          let admin = row.name
+          let admin = row.id
           console.log(admin)
           let stmt = db.prepare(`INSERT INTO lists ('title', 'subject', 'tags', 'time', 'admin') VALUES (?,?,?,?,?)`)
-          stmt.run(title, subject, tags, time, admin, (err) => {
-            console.log(err)            
-          })
+          stmt.run(title, subject, tags, time, admin)
           ws.send(200)
           wss.clients.forEach(function each(client) {
             if (client.readyState === WebSocket.OPEN) {
