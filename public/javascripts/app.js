@@ -39,7 +39,6 @@ const getSubjectByid = (id) => {
 }
 
 const generateItem = (title, time, subject, tags) => {
-
   let date = new Date(time)
   date = `${date.getMonth()+1}/${date.getDate()}`
 
@@ -77,6 +76,9 @@ const render = () => {
   if (max === 0) {
     max = 9999999999999
   }
+  items = items.sort((a, b) => {
+    return a.time - b.time
+  })
   let filtered = items.filter(item => {
     return item.time <= max && item.time >= min
   })
@@ -156,9 +158,6 @@ const initWS = () => {
       render()
     } else if (event.type === "update") {
       items.push(event.data)
-      items.sort((a, b) => {
-        return a.time - b.time
-      })
       render()
     } else if (event.type === "tags") {
       tags = event.data
