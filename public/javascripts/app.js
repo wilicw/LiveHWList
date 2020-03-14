@@ -221,3 +221,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initWS()
   initNav()
 })
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js')
+}
