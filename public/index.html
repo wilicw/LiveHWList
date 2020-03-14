@@ -3,20 +3,33 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Live Homework List</title>
-  <link rel="stylesheet" href="calendar/core/main.min.css">
-  <script defer src="calendar/core/main.min.js"></script>
-  
-  <link rel="stylesheet" href="calendar/daygrid/main.min.css">
-  <script defer src="calendar/daygrid/main.min.js"></script>
-
-  <link rel="stylesheet" href="calendar/list/main.min.css">
-  <script defer src="calendar/list/main.min.js"></script>
-  
+  <title>聯絡簿</title>  
   <link rel="stylesheet" href="app.css">
+  <link href="https://fonts.googleapis.com/css?family=Noto+Sans+TC&display=swap" rel="stylesheet">
   <script defer src="javascripts/app.js"></script>
 </head>
 <body>
-  <div id="calendar"></div>
+  <h1 class="title">聯絡簿 <span id="show_add">+</span></h1>
+  <nav id="nav">
+    <p id="today" class="nav_item active">當日</p>
+    <p id="tomorrow" class="nav_item">明天</p>
+    <p id="all" class="nav_item">全部</p>
+  </nav>
+  <div id="calendar" class="active"></div>
+  <div id="add">
+    <p>標題</p>
+    <input type="text" name="title" id="add_title">
+    <p>科目</p>
+    <input type="text" name="subject" id="add_subject">
+    <p>標籤</p>
+    <input type="text" name="tags" id="add_tags">
+    <p>時間</p>
+    <input type="text" name="time" id="add_time">
+    <p>密碼</p>
+    <input type="text" name="key" id="add_key">
+    <br>
+    <br>
+    <button onclick="addItem()">送出</button>
+  </div>
 </body>
 </html>

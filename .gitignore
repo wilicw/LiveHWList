@@ -1,3 +1,5 @@
 node_modules/
 .dist/
 process.json
+.env
+data.db
