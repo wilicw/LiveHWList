@@ -30,7 +30,7 @@ wss.on('connection', connection = ws => {
     if (data.methods === "add") {
       const title = data.title
       const time = new Date(data.time).getTime()
-      const key = md5(data.key)
+      const key = String(md5(data.key))
       const subject = data.subject
       const tags = data.tags.join(",")
       db.serialize(() => {
