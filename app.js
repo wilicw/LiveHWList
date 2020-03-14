@@ -30,12 +30,13 @@ wss.on('connection', connection = ws => {
       const title = data.title
       const time = new Date(data.time).getTime()
       const key = md5(data.key)
-      console.log(key)
       const subject = data.subject
       const tags = data.tags.join(",")
       db.serialize(() => {
         db.each(`SELECT * from admins where key LIKE "${key}"`, (err, row) => {
           let admin = row.name
+          console.log(admin)
+          
           let stmt = db.prepare(`INSERT INTO lists ('title', 'subject', 'tags', 'time', 'admin') VALUES (?,?,?,?,?)`)
           stmt.run(title, subject, tags, time, admin)
           wss.clients.forEach(function each(client) {
