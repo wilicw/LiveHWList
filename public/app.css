@@ -5,12 +5,31 @@
   --min-shadow: 0 2px 4px 0 rgba(0,0,0,0.1);
 }
 
+@font-face {
+  font-family: openhuninn;
+  src: url("fonts/jf-openhuninn-1.0.ttf");
+}
+
 * {
-  font-family: 'Noto Sans TC', sans-serif;
+  font-family: 'openhuninn';
+}
+
+.noselect {
+  -webkit-touch-callout: none; /* iOS Safari */
+  -webkit-user-select: none; /* Safari */
+  -khtml-user-select: none; /* Konqueror HTML */
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* Internet Explorer/Edge */
+  user-select: none; /* Non-prefixed version, currently */
+}
+
+body::-webkit-scrollbar {
+  display: none;
 }
 
 body {
   background: var(--background-color);
+  overflow: -moz-scrollbars-none;
 }
 
 #calendar {
@@ -118,9 +137,9 @@ nav p {
 
 .icon_group .iconify {
   cursor: pointer;
-  width: 20px;
+  width: 1.3em;
   height: auto;
-  margin-top: 40px;
+  margin-top: 28px;
   color: #CCCCCC;
 }
 
