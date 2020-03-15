@@ -1,12 +1,13 @@
 let Calendar = document.getElementById('calendar')
 
 const socketProtocol = (window.location.protocol === 'https:' ? 'wss:' : 'ws:')
-const echoSocketUrl = `${socketProtocol}//${window.location.hostname}/echo/`
+const echoSocketUrl = `${socketProtocol}//${window.location.hostname}:4000/echo/`
 const socket = new WebSocket(echoSocketUrl)
 
 let items = []
 let tags = []
 let subject = []
+let db
 
 const nav = document.getElementById('nav')
 
@@ -98,6 +99,79 @@ const generateItem = (id, title, time, subject, tags) => {
   return card
 }
 
+const initDB = () => {
+  window.indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
+  window.IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction || window.msIDBTransaction;
+  window.IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange;
+  if (!window.indexedDB) {
+    console.log("Your browser doesn't support a stable version of IndexedDB. Such and such feature will not be available.")
+    return
+  }
+  let request = window.indexedDB.open("hwList")
+  request.onerror = event => {
+    // Do nothing with request.errorCode!
+  }
+  request.onsuccess = event => {
+    db = request.result
+    db.onerror = event => {
+      console.log("Database error: " + event.target.errorCode)
+    }
+  }
+  request.onupgradeneeded = event => {
+    db = event.target.result
+    let objectStore = db.createObjectStore("lists", { keyPath: "id" })
+    objectStore.createIndex("id", "id", { unique: true })
+    objectStore.createIndex("subject", "subject")
+    objectStore.createIndex("tags", "tags")
+    objectStore.createIndex("time", "time")
+
+    objectStore = db.createObjectStore("tags", { keyPath: "id" })
+    objectStore.createIndex("id", "id", { unique: true })
+    objectStore.createIndex("name", "name")
+    objectStore.createIndex("color", "color")
+
+    objectStore = db.createObjectStore("subject", { keyPath: "id" })
+    objectStore.createIndex("id", "id", { unique: true })
+    objectStore.createIndex("name", "name")
+  }
+}
+
+const addItemInDB = (item) => {
+  let request = db.transaction('lists', 'readwrite').objectStore('lists').put(item)
+  request.onerror = event => {
+    console.log(event)
+  }
+}
+
+const getDBData = () => {
+  let request = db.transaction('lists', 'readwrite').objectStore('lists').openCursor()
+  request.onsuccess = event => {
+    let cursor = event.target.result
+    if (cursor && cursor.value) {
+      items.push(cursor.value)
+      cursor.continue()
+    }
+  }
+
+  request = db.transaction('tags', 'readwrite').objectStore('tags').openCursor()
+  request.onsuccess = event => {
+    let cursor = event.target.result
+    if (cursor && cursor.value) {
+      tags.push(cursor.value)
+      cursor.continue()
+    }
+  }
+
+  request = db.transaction('subject', 'readwrite').objectStore('subject').openCursor()
+  request.onsuccess = event => {
+    let cursor = event.target.result
+    if (cursor && cursor.value) {
+      subject.push(cursor.value)
+      cursor.continue()
+    }
+  }
+}
+
 const render = () => {
   Calendar.innerHTML = ""
   let min = range[0]
@@ -120,6 +194,7 @@ const render = () => {
   }
   let dateTitle = ""
   filtered.map(item => {
+    addItemInDB(item)
     dT = dateToString(item.time)
     if (dT !== dateTitle) {
       let titleElem = document.createElement('p')
@@ -131,6 +206,7 @@ const render = () => {
     Calendar.appendChild(generateItem(item.id, item.title, item.time, item.subject, item.tags))
   })
 }
+
 const initNav = () => {
   let inactive = () => {
     Calendar.classList.add('active')
@@ -184,6 +260,7 @@ const initNav = () => {
 }
 
 const initWS = () => {
+  initDB()
   socket.onopen = () => {
     socket.send(JSON.stringify({methods: "gettags"}))
     socket.send(JSON.stringify({methods: "getsubject"}))
@@ -191,6 +268,7 @@ const initWS = () => {
     console.log("Success")
   }
   socket.onmessage = (msg) => {
+    initDB()
     event = JSON.parse(msg.data)
     console.log(event)
     if (event.type === "all") {
@@ -201,9 +279,26 @@ const initWS = () => {
       render()
     } else if (event.type === "tags") {
       tags = event.data
+      // Save in db
+      tags.map(tag => {
+        let request = db.transaction('tags', 'readwrite').objectStore('tags').put(tag)
+        request.onerror = event => {
+          console.log(event)
+        }
+      })
     } else if (event.type === "subject") {
       subject = event.data
+      // Save in db
+      subject.map(s => {
+        let request = db.transaction('subject', 'readwrite').objectStore('subject').put(s)
+        request.onerror = event => {
+          console.log(event)
+        }
+      })
     }
+  }
+  socket.onerror = event => {
+    getDBData()
   }
 }
 
