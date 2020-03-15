@@ -16,6 +16,17 @@
   <script defer src="javascripts/app.js"></script>
 </head>
 <body>
+  <div class="notification_card" id="notification_card">
+    <div class="setting" id="setting_card">
+      <h1>設定提醒</h1>
+      <p>時間</p>
+      <input type="datetime-local" name="time" id="notification_time" placeholder="選擇通知時間">
+      <br>
+      <br>
+      <button id="setting_button">設定</button>
+      <button id="clear_notification">清除提醒</button>
+    </div>
+  </div>
   <h1 class="title noselect">聯絡簿 <span id="show_add">+</span></h1>
   <nav id="nav" class="noselect">
     <p id="today" class="nav_item active">當日</p>

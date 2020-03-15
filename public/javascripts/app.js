@@ -78,21 +78,23 @@ const generateItem = (id, title, time, subject, tags) => {
   left_block.appendChild(tagsElem)
   
   let icons_group = document.createElement('div')
+  icons_group.setAttribute('id', `icon${id}`)
   icons_group.classList.add('icon_group')
   
   let icon = document.createElement('span')
+
   icon.classList.add('iconify')
   icon.setAttribute('data-icon', 'mdi-bell-ring-outline')
   icon.setAttribute('data-inline', 'false')
-  icon.setAttribute('id', `checkbox${id}`)
   icons_group.appendChild(icon)
 
   icons_group.addEventListener('click', e => {
     if (window.Notification) {
       Notification.requestPermission(status => {
-        console.log('Status of the request:', status);
+        // console.log('Status of the request:', status)
       })
     }
+    setNotification(id)
   })
 
   card.setAttribute('style', `border-left: 5px solid ${tags.color};`)
@@ -102,7 +104,83 @@ const generateItem = (id, title, time, subject, tags) => {
   return card
 }
 
-const initDB = () => {
+const setIcon = (id, icon_name) => {
+  let icon_group = document.getElementById(`icon${id}`)
+  icon_group.innerHTML = ""
+  let icon = document.createElement('span')
+  icon.classList.add('iconify')
+  icon.setAttribute('data-icon', icon_name)
+  icon.setAttribute('data-inline', 'false')
+  icon_group.appendChild(icon)
+}
+
+const setNotification = (id) => {
+  let reset = name => {
+    let el = document.getElementById(name),
+      elClone = el.cloneNode(true)
+    el.parentNode.replaceChild(elClone, el)
+  }
+
+  // load exist data
+  document.getElementById('notification_time')._flatpickr.clear()
+  let request = db.transaction('notification', 'readwrite').objectStore('notification').get(id)
+  request.onsuccess = event => {
+    let result = event.target.result
+    if (result) {
+      console.log(result)
+      document.getElementById('notification_time')._flatpickr.setDate(new Date(result.time))
+    }
+  }
+
+  // open card
+  document.getElementById('notification_card').classList.add('active')
+  document.getElementById('notification_card').addEventListener('click', e => {
+    document.getElementById('notification_card').classList.remove('active')
+  }, { once: true })
+  document.getElementById('setting_card').addEventListener('click', e => {
+    e.stopPropagation()
+  }, { once: true })
+
+  // save
+  document.getElementById('setting_button').addEventListener('click', e => {
+    reset('clear_notification')
+    reset('setting_button')
+    console.log(`add notification ${id}`)
+    let item = items.filter(i => {
+      return i.id == id
+    })
+    item = item[0]
+    let time = document.getElementById('notification_time').value
+    if (time) {
+      item.time = new Date(time).getTime()
+      let req = db.transaction('notification', 'readwrite').objectStore('notification').put(item)
+      req.onsuccess = event => {
+        document.getElementById('notification_card').classList.remove('active')
+        setIcon(id, 'mdi-bell-ring')
+      }
+      req.onerror = event => {
+        alert("請清除快取再試一次")
+      }
+    }
+  })
+
+  //clear
+  document.getElementById('clear_notification').addEventListener('click', e => {
+    reset('clear_notification')
+    reset('setting_button')
+    console.log(`remove notification ${id}`)
+    let request = db.transaction('notification', 'readwrite').objectStore('notification').delete(id)
+    request.onerror = event => {
+      console.log(event)
+    }
+    request.onsuccess = event => {
+      document.getElementById('notification_card').classList.remove('active')
+      setIcon(id, 'mdi-bell-ring-outline')
+    }
+  })
+}
+
+const initDB = async () => {
   window.indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
   window.IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction || window.msIDBTransaction;
   window.IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange;
@@ -110,37 +188,43 @@ const initDB = () => {
     console.log("Your browser doesn't support a stable version of IndexedDB. Such and such feature will not be available.")
     return
   }
-  let request = window.indexedDB.open("hwList")
+  let request = await window.indexedDB.open("hwList", 5)
   request.onerror = event => {
     // Do nothing with request.errorCode!
+    console.log(event)
   }
-  request.onsuccess = event => {
+  request.onsuccess = async (event) => {
     db = request.result
     db.onerror = event => {
       console.log("Database error: " + event.target.errorCode)
     }
   }
-  request.onupgradeneeded = event => {
+  request.onupgradeneeded = async (event) => {
     db = event.target.result
-    let objectStore = db.createObjectStore("lists", { keyPath: "id" })
-    objectStore.createIndex("id", "id", { unique: true })
-    objectStore.createIndex("subject", "subject")
-    objectStore.createIndex("tags", "tags")
-    objectStore.createIndex("time", "time")
+    let objectStore = await db.createObjectStore("lists", { keyPath: "id" })
+    await objectStore.createIndex("id", "id", { unique: true })
+    await objectStore.createIndex("subject", "subject")
+    await objectStore.createIndex("tags", "tags")
+    await objectStore.createIndex("time", "time")
 
-    objectStore = db.createObjectStore("tags", { keyPath: "id" })
-    objectStore.createIndex("id", "id", { unique: true })
-    objectStore.createIndex("name", "name")
-    objectStore.createIndex("color", "color")
+    objectStore = await db.createObjectStore("tags", { keyPath: "id" })
+    await objectStore.createIndex("id", "id", { unique: true })
+    await objectStore.createIndex("name", "name")
+    await objectStore.createIndex("color", "color")
 
-    objectStore = db.createObjectStore("subject", { keyPath: "id" })
-    objectStore.createIndex("id", "id", { unique: true })
-    objectStore.createIndex("name", "name")
+    objectStore = await db.createObjectStore("subject", { keyPath: "id" })
+    await objectStore.createIndex("id", "id", { unique: true })
+    await objectStore.createIndex("name", "name")
+
+    objectStore = await db.createObjectStore("notification", { keyPath: "id" })
+    await objectStore.createIndex("id", "id", { unique: true })
+    await objectStore.createIndex("time", "time")
+    await objectStore.createIndex("title", "title")
   }
 }
 
-const addItemInDB = (item) => {
-  let request = db.transaction('lists', 'readwrite').objectStore('lists').put(item)
+const addItemInDB = async (item) => {
+  let request = await db.transaction('lists', 'readwrite').objectStore('lists').put(item)
   request.onerror = event => {
     console.log(event)
   }
@@ -207,6 +291,14 @@ const render = () => {
       dateTitle = dT
     }
     Calendar.appendChild(generateItem(item.id, item.title, item.time, item.subject, item.tags))
+    let request = db.transaction('notification', 'readwrite').objectStore('notification').get(item.id)
+    request.onsuccess = event => {
+      let result = event.target.result
+      if (result) {
+        console.log(result)
+        setIcon(item.id, 'mdi-bell-ring')
+      }
+    }
   })
 }
 
@@ -262,8 +354,8 @@ const initNav = () => {
   })
 }
 
-const initWS = () => {
-  initDB()
+const initWS = async () => {
+  await initDB()
   socket.onopen = () => {
     socket.send(JSON.stringify({methods: "gettags"}))
     socket.send(JSON.stringify({methods: "getsubject"}))
@@ -271,7 +363,6 @@ const initWS = () => {
     console.log("Success")
   }
   socket.onmessage = (msg) => {
-    initDB()
     event = JSON.parse(msg.data)
     console.log(event)
     if (event.type === "all") {
@@ -323,15 +414,21 @@ const addItem = () => {
   ))
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+window.onload = () => {
   initWS()
   initNav()
   flatpickr('#add_time', {
     'locale': 'zh_tw',
     'minDate': new Date()
   })
-})
-
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js')
+  flatpickr('#notification_time', {
+    'locale': 'zh_tw',
+    'enableTime': true
+  })
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js')
+    navigator.serviceWorker.ready.then(registration => {
+      registration.sync.register("notification_sync")
+    })
+  }
 }

@@ -23,3 +23,10 @@ workbox.routing.registerRoute(
         ],
     })
 );
+
+self.addEventListener('sync', function (e) {
+    console.log(`service worker tag: ${e.tag}`);
+    if (e.tag === 'notification_sync') {
+        e.waitUntil(console.log(123))
+    }
+});
