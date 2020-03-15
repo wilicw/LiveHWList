@@ -1,7 +1,7 @@
 let Calendar = document.getElementById('calendar')
 
 const socketProtocol = (window.location.protocol === 'https:' ? 'wss:' : 'ws:')
-const echoSocketUrl = `${socketProtocol}//${window.location.hostname}/echo/`
+const echoSocketUrl = `${socketProtocol}//${window.location.hostname}:4000/echo/`
 const socket = new WebSocket(echoSocketUrl)
 
 let items = []
@@ -326,6 +326,10 @@ const addItem = () => {
 document.addEventListener('DOMContentLoaded', () => {
   initWS()
   initNav()
+  flatpickr('#add_time', {
+    'locale': 'zh_tw',
+    'minDate': new Date()
+  })
 })
 
 if ('serviceWorker' in navigator) {
