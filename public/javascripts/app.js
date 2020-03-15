@@ -267,7 +267,7 @@ const loadCacheData = async () => {
 
 const initWS = async () => {
   const socketProtocol = (window.location.protocol === 'https:' ? 'wss:' : 'ws:')
-  const echoSocketUrl = `${socketProtocol}//${window.location.hostname}:4000/echo/`
+  const echoSocketUrl = `${socketProtocol}//${window.location.hostname}/echo/`
   const socket = new WebSocket(echoSocketUrl)
   await loadCacheData()
   socket.onopen = event => {
