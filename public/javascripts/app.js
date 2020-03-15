@@ -2,7 +2,6 @@ let Calendar = document.getElementById('calendar')
 let items = []
 let tags = []
 let subject = []
-let db
 
 const pad = (n) => {
   if (n < 10) {
@@ -19,7 +18,7 @@ let range = [today, today+86400000]
 const dateToString = (time, weekday=false) => {
   let date = new Date(time)
   if (weekday) {
-    let formater = new Intl.DateTimeFormat('zh', {weekday: "long"}).format.bind()
+    let formater = new Intl.DateTimeFormat('zh', {weekday: 'long'}).format.bind()
     return `${date.getMonth()+1}/${date.getDate()} ${formater(date)}`
   }
   return `${date.getMonth()+1}/${date.getDate()}`
@@ -97,7 +96,7 @@ const generateItem = (id, title, time, subject, tags) => {
 
 const setIcon = (id, icon_name) => {
   let icon_group = document.getElementById(`icon${id}`)
-  icon_group.innerHTML = ""
+  icon_group.innerHTML = ''
   let icon = document.createElement('span')
   icon.classList.add('iconify')
   icon.setAttribute('data-icon', icon_name)
@@ -105,32 +104,30 @@ const setIcon = (id, icon_name) => {
   icon_group.appendChild(icon)
 }
 
-const setNotification = (id) => {
+const setNotification = async (id) => {
   let reset = name => {
     let el = document.getElementById(name),
       elClone = el.cloneNode(true)
     el.parentNode.replaceChild(elClone, el)
   }
+  document.getElementById('notification_time')._flatpickr.clear()
 
   // load exist data
-  document.getElementById('notification_time')._flatpickr.clear()
-  let request = db.transaction('notification', 'readwrite').objectStore('notification').get(id)
-  request.onsuccess = event => {
-    let result = event.target.result
-    if (result) {
-      console.log(result)
-      document.getElementById('notification_time')._flatpickr.setDate(new Date(result.time))
+  let notification_data = await localforage.getItem('notification') || []
+  notification_data.map(i => {
+    if (i.id == id) {
+      document.getElementById('notification_time')._flatpickr.setDate(new Date(i.time))
     }
-  }
+  })
 
   // open card
   document.getElementById('notification_card').classList.add('active')
   document.getElementById('notification_card').addEventListener('click', e => {
     document.getElementById('notification_card').classList.remove('active')
-  }, { once: true })
+  })
   document.getElementById('setting_card').addEventListener('click', e => {
     e.stopPropagation()
-  }, { once: true })
+  })
 
   // save
   document.getElementById('setting_button').addEventListener('click', e => {
@@ -144,14 +141,13 @@ const setNotification = (id) => {
     let time = document.getElementById('notification_time').value
     if (time) {
       item.time = new Date(time).getTime()
-      let req = db.transaction('notification', 'readwrite').objectStore('notification').put(item)
-      req.onsuccess = event => {
+      notification_data = notification_data.filter(i => i.id !== id)
+      notification_data.push(item)
+      localforage.setItem('notification', notification_data).then(value => {
+        console.log(value)
         document.getElementById('notification_card').classList.remove('active')
-        setIcon(id, 'mdi-bell-ring')
-      }
-      req.onerror = event => {
-        alert("請清除快取再試一次")
-      }
+        setIcon(id, 'mdi-bell-ring')  
+      })
     }
   })
 
@@ -160,47 +156,17 @@ const setNotification = (id) => {
     reset('clear_notification')
     reset('setting_button')
     console.log(`remove notification ${id}`)
-    let request = db.transaction('notification', 'readwrite').objectStore('notification').delete(id)
-    request.onerror = event => {
-      console.log(event)
-    }
-    request.onsuccess = event => {
+    notification_data = notification_data.filter(i => i.id !== id)
+    localforage.setItem('notification', notification_data).then(value => {
+      console.log(value)
       document.getElementById('notification_card').classList.remove('active')
       setIcon(id, 'mdi-bell-ring-outline')
-    }
+    })
   })
 }
 
-const initDB = async () => {
-  window.indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB
-  window.IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction || window.msIDBTransaction
-  window.IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange
-  if (!window.indexedDB) {
-    console.log("Your browser doesn't support a stable version of IndexedDB. Such and such feature will not be available.")
-    return
-  }
-  let request = await window.indexedDB.open("hwList", 6)
-  request.onerror = event => {
-    // Do nothing with request.errorCode!
-    console.log(event)
-  }
-  request.onsuccess = async (event) => {
-    db = request.result
-    db.onerror = event => {
-      console.log("Database error: " + event.target.errorCode)
-    }
-  }
-  request.onupgradeneeded = async (event) => {
-    db = event.target.result
-    let objectStore = await db.createObjectStore("notification", { keyPath: "id" })
-    await objectStore.createIndex("id", "id", { unique: true })
-    await objectStore.createIndex("time", "time")
-    await objectStore.createIndex("title", "title")
-  }
-}
-
 const render = () => {
-  Calendar.innerHTML = ""
+  Calendar.innerHTML = ''
   let min = range[0]
   let max = range[1]
   if (max === 0) {
@@ -215,11 +181,11 @@ const render = () => {
   if (filtered.length === 0) {
     let nothing = document.createElement('p')
     nothing.classList.add('nothing')
-    nothing.innerText = "Nothing"
+    nothing.innerText = 'Nothing'
     Calendar.appendChild(nothing)
     return
   }
-  let dateTitle = ""
+  let dateTitle = ''
   filtered.map(item => {
     dT = dateToString(item.time, true)
     if (dT !== dateTitle) {
@@ -230,14 +196,12 @@ const render = () => {
       dateTitle = dT
     }
     Calendar.appendChild(generateItem(item.id, item.title, item.time, item.subject, item.tags))
-    let request = db.transaction('notification', 'readwrite').objectStore('notification').get(item.id)
-    request.onsuccess = event => {
-      let result = event.target.result
-      if (result) {
-        console.log(result)
-        setIcon(item.id, 'mdi-bell-ring')
-      }
-    }
+    localforage.getItem('notification').then(value => {
+      let notification_data = value || []
+      notification_data.map(i => {
+        setIcon(i.id, 'mdi-bell-ring')
+      })
+    })
   })
 }
 
@@ -260,7 +224,7 @@ const initNav = () => {
   document.getElementById('tomorrow').addEventListener('click', e => {
     inactive()
     e.srcElement.classList.add('active')
-    Calendar.innerHTML = ""
+    Calendar.innerHTML = ''
     range = [today+86400000, today+2*86400000]
     render()
   })
@@ -268,7 +232,7 @@ const initNav = () => {
   document.getElementById('all').addEventListener('click', e => {
     inactive()
     e.srcElement.classList.add('active')
-    Calendar.innerHTML = ""
+    Calendar.innerHTML = ''
     range = [today, 0]
     render()
   })
@@ -276,7 +240,7 @@ const initNav = () => {
   document.getElementById('show_add').addEventListener('click', () => {
     Calendar.classList.remove('active')
     document.getElementById('add').classList.add('active')
-    document.getElementById('add_subject').innerHTML = ""
+    document.getElementById('add_subject').innerHTML = ''
     subject.map(s => {
       let option = document.createElement('option')
       option.value = s.id
@@ -284,7 +248,7 @@ const initNav = () => {
       document.getElementById('add_subject').appendChild(option)
     })
 
-    document.getElementById('add_tags').innerHTML = ""
+    document.getElementById('add_tags').innerHTML = ''
     tags.map(tag => {
       let option = document.createElement('option')
       option.value = tag.id
@@ -294,30 +258,40 @@ const initNav = () => {
   })
 }
 
+const loadCacheData = async () => {
+  tags = await localforage.getItem('tags') || []
+  subject = await localforage.getItem('subject') || []
+  items = await localforage.getItem('lists') || []
+  render()
+}
+
 const initWS = async () => {
-  await initDB()
   const socketProtocol = (window.location.protocol === 'https:' ? 'wss:' : 'ws:')
-  const echoSocketUrl = `${socketProtocol}//${window.location.hostname}/echo/`
-  const socket = await new WebSocket(echoSocketUrl)
+  const echoSocketUrl = `${socketProtocol}//${window.location.hostname}:4000/echo/`
+  const socket = new WebSocket(echoSocketUrl)
+  await loadCacheData()
   socket.onopen = event => {
-    socket.send(JSON.stringify({methods: "gettags"}))
-    socket.send(JSON.stringify({methods: "getsubject"}))
-    socket.send(JSON.stringify({methods: "get"}))
-    console.log("Success")
+    socket.send(JSON.stringify({methods: 'gettags'}))
+    socket.send(JSON.stringify({methods: 'getsubject'}))
+    socket.send(JSON.stringify({methods: 'get'}))
+    console.log('Success')
   }
   socket.onmessage = msg => {
     event = JSON.parse(msg.data)
     console.log(event)
-    if (event.type === "all") {
+    if (event.type === 'all') {
       items = event.data
+      localforage.setItem('lists', items)
       render()
-    } else if (event.type === "update") {
+    } else if (event.type === 'update') {
       items.push(event.data)
       render()
-    } else if (event.type === "tags") {
+    } else if (event.type === 'tags') {
       tags = event.data
-    } else if (event.type === "subject") {
+      localforage.setItem('tags', tags)
+    } else if (event.type === 'subject') {
       subject = event.data
+      localforage.setItem('subject', subject)
     }
   }
 }
@@ -330,7 +304,7 @@ const addItem = () => {
   const tags = document.getElementById('add_tags').value
   socket.send(JSON.stringify(
     {
-      methods: "add",
+      methods: 'add',
       title: title,
       time: time,
       subject: subject,
@@ -341,12 +315,12 @@ const addItem = () => {
 }
 
 const initTimePicker = () => {
+  flatpickr.localize(flatpickr.l10ns.zh_tw)
+  flatpickr.l10ns.default.firstDayOfWeek = 1
   flatpickr('#add_time', {
-    'locale': 'zh_tw',
     'minDate': today
   })
   flatpickr('#notification_time', {
-    'locale': 'zh_tw',
     'minDate': today,
     'enableTime': true
   })
@@ -357,14 +331,15 @@ const initServiceWorker = () => {
     navigator.serviceWorker.register('/sw.js')
     if ('SyncManager' in window) {
       navigator.serviceWorker.ready.then(registration => {
-        registration.sync.register("notification_sync")
+        registration.sync.register('notification_sync')
       })
     }
   }
 }
 
-window.onload = () => {
-  initWS()
+window.onload = async () => {
+  await initWS()
+  render()
   initNav()
   initTimePicker()
   initServiceWorker()
