@@ -1,7 +1,7 @@
-importScripts('https://storage.googleapis.com/workbox-cdn/releases/3.0.0/workbox-sw.js');
+importScripts('https://storage.googleapis.com/workbox-cdn/releases/3.0.0/workbox-sw.js')
 
 workbox.precaching.precacheAndRoute([
-    {url:'/index.html', revision:1}
+    {url:'/index.html', revision: 1}
 ])
 
 workbox.routing.registerRoute(
@@ -9,7 +9,7 @@ workbox.routing.registerRoute(
     workbox.strategies.staleWhileRevalidate({
         cacheName: 'workbox:css',
     })
-);
+)
 
 workbox.routing.registerRoute(
     /.*\.png/,
@@ -22,11 +22,11 @@ workbox.routing.registerRoute(
             })
         ],
     })
-);
+)
 
 self.addEventListener('sync', function (e) {
-    console.log(`service worker tag: ${e.tag}`);
+    console.log(`service worker tag: ${e.tag}`)
     if (e.tag === 'notification_sync') {
-        e.waitUntil(console.log(123))
+        e.waitUntil()
     }
-});
+})

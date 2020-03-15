@@ -1,15 +1,8 @@
 let Calendar = document.getElementById('calendar')
-
-const socketProtocol = (window.location.protocol === 'https:' ? 'wss:' : 'ws:')
-const echoSocketUrl = `${socketProtocol}//${window.location.hostname}/echo/`
-const socket = new WebSocket(echoSocketUrl)
-
 let items = []
 let tags = []
 let subject = []
 let db
-
-const nav = document.getElementById('nav')
 
 const pad = (n) => {
   if (n < 10) {
@@ -19,11 +12,8 @@ const pad = (n) => {
   }
 }
 
-let today = new Date();
-let dd = pad(today.getDate())
-let mm = pad(today.getMonth()+1)
-let yyyy = today.getFullYear()
-today = new Date(`${yyyy}-${mm}-${dd} 00:00:00`).getTime()
+let today = new Date()
+today = new Date(`${today.getFullYear()}-${pad(today.getMonth()+1)}-${pad(today.getDate())} 00:00:00`).getTime()
 let range = [today, today+86400000]
 
 const dateToString = (time, weekday=false) => {
@@ -76,31 +66,32 @@ const generateItem = (id, title, time, subject, tags) => {
   left_block.appendChild(titleElem)
   left_block.appendChild(subjectElem)
   left_block.appendChild(tagsElem)
-  
-  let icons_group = document.createElement('div')
-  icons_group.setAttribute('id', `icon${id}`)
-  icons_group.classList.add('icon_group')
-  
-  let icon = document.createElement('span')
-
-  icon.classList.add('iconify')
-  icon.setAttribute('data-icon', 'mdi-bell-ring-outline')
-  icon.setAttribute('data-inline', 'false')
-  icons_group.appendChild(icon)
-
-  icons_group.addEventListener('click', e => {
-    if (window.Notification) {
-      Notification.requestPermission(status => {
-        // console.log('Status of the request:', status)
-      })
-    }
-    setNotification(id)
-  })
-
-  card.setAttribute('style', `border-left: 5px solid ${tags.color};`)
   card.append(left_block)
-  card.append(icons_group)
 
+  // if background sync available
+  if ('SyncManager' in window) {
+    let icons_group = document.createElement('div')
+    icons_group.setAttribute('id', `icon${id}`)
+    icons_group.classList.add('icon_group')
+    
+    let icon = document.createElement('span')
+
+    icon.classList.add('iconify')
+    icon.setAttribute('data-icon', 'mdi-bell-ring-outline')
+    icon.setAttribute('data-inline', 'false')
+    icons_group.appendChild(icon)
+
+    icons_group.addEventListener('click', e => {
+      if (window.Notification) {
+        Notification.requestPermission(status => {
+          console.log('Status of the request:', status)
+        })
+      }
+      setNotification(id)
+    })
+    card.append(icons_group)
+  }
+  card.setAttribute('style', `border-left: 5px solid ${tags.color};`)
   return card
 }
 
@@ -181,14 +172,14 @@ const setNotification = (id) => {
 }
 
 const initDB = async () => {
-  window.indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB;
-  window.IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction || window.msIDBTransaction;
-  window.IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange;
+  window.indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB
+  window.IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction || window.msIDBTransaction
+  window.IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange
   if (!window.indexedDB) {
     console.log("Your browser doesn't support a stable version of IndexedDB. Such and such feature will not be available.")
     return
   }
-  let request = await window.indexedDB.open("hwList", 5)
+  let request = await window.indexedDB.open("hwList", 6)
   request.onerror = event => {
     // Do nothing with request.errorCode!
     console.log(event)
@@ -201,61 +192,10 @@ const initDB = async () => {
   }
   request.onupgradeneeded = async (event) => {
     db = event.target.result
-    let objectStore = await db.createObjectStore("lists", { keyPath: "id" })
-    await objectStore.createIndex("id", "id", { unique: true })
-    await objectStore.createIndex("subject", "subject")
-    await objectStore.createIndex("tags", "tags")
-    await objectStore.createIndex("time", "time")
-
-    objectStore = await db.createObjectStore("tags", { keyPath: "id" })
-    await objectStore.createIndex("id", "id", { unique: true })
-    await objectStore.createIndex("name", "name")
-    await objectStore.createIndex("color", "color")
-
-    objectStore = await db.createObjectStore("subject", { keyPath: "id" })
-    await objectStore.createIndex("id", "id", { unique: true })
-    await objectStore.createIndex("name", "name")
-
-    objectStore = await db.createObjectStore("notification", { keyPath: "id" })
+    let objectStore = await db.createObjectStore("notification", { keyPath: "id" })
     await objectStore.createIndex("id", "id", { unique: true })
     await objectStore.createIndex("time", "time")
     await objectStore.createIndex("title", "title")
-  }
-}
-
-const addItemInDB = async (item) => {
-  let request = await db.transaction('lists', 'readwrite').objectStore('lists').put(item)
-  request.onerror = event => {
-    console.log(event)
-  }
-}
-
-const getDBData = () => {
-  let request = db.transaction('lists', 'readwrite').objectStore('lists').openCursor()
-  request.onsuccess = event => {
-    let cursor = event.target.result
-    if (cursor && cursor.value) {
-      items.push(cursor.value)
-      cursor.continue()
-    }
-  }
-
-  request = db.transaction('tags', 'readwrite').objectStore('tags').openCursor()
-  request.onsuccess = event => {
-    let cursor = event.target.result
-    if (cursor && cursor.value) {
-      tags.push(cursor.value)
-      cursor.continue()
-    }
-  }
-
-  request = db.transaction('subject', 'readwrite').objectStore('subject').openCursor()
-  request.onsuccess = event => {
-    let cursor = event.target.result
-    if (cursor && cursor.value) {
-      subject.push(cursor.value)
-      cursor.continue()
-    }
   }
 }
 
@@ -275,13 +215,12 @@ const render = () => {
   if (filtered.length === 0) {
     let nothing = document.createElement('p')
     nothing.classList.add('nothing')
-    nothing.innerText = "Nothing."
+    nothing.innerText = "Nothing"
     Calendar.appendChild(nothing)
     return
   }
   let dateTitle = ""
   filtered.map(item => {
-    addItemInDB(item)
     dT = dateToString(item.time, true)
     if (dT !== dateTitle) {
       let titleElem = document.createElement('p')
@@ -303,6 +242,7 @@ const render = () => {
 }
 
 const initNav = () => {
+  const nav = document.getElementById('nav')
   let inactive = () => {
     Calendar.classList.add('active')
     document.getElementById('add').classList.remove('active')
@@ -356,13 +296,16 @@ const initNav = () => {
 
 const initWS = async () => {
   await initDB()
-  socket.onopen = () => {
+  const socketProtocol = (window.location.protocol === 'https:' ? 'wss:' : 'ws:')
+  const echoSocketUrl = `${socketProtocol}//${window.location.hostname}/echo/`
+  const socket = await new WebSocket(echoSocketUrl)
+  socket.onopen = event => {
     socket.send(JSON.stringify({methods: "gettags"}))
     socket.send(JSON.stringify({methods: "getsubject"}))
     socket.send(JSON.stringify({methods: "get"}))
     console.log("Success")
   }
-  socket.onmessage = (msg) => {
+  socket.onmessage = msg => {
     event = JSON.parse(msg.data)
     console.log(event)
     if (event.type === "all") {
@@ -373,26 +316,9 @@ const initWS = async () => {
       render()
     } else if (event.type === "tags") {
       tags = event.data
-      // Save in db
-      tags.map(tag => {
-        let request = db.transaction('tags', 'readwrite').objectStore('tags').put(tag)
-        request.onerror = event => {
-          console.log(event)
-        }
-      })
     } else if (event.type === "subject") {
       subject = event.data
-      // Save in db
-      subject.map(s => {
-        let request = db.transaction('subject', 'readwrite').objectStore('subject').put(s)
-        request.onerror = event => {
-          console.log(event)
-        }
-      })
     }
-  }
-  socket.onerror = event => {
-    getDBData()
   }
 }
 
@@ -414,17 +340,19 @@ const addItem = () => {
   ))
 }
 
-window.onload = () => {
-  initWS()
-  initNav()
+const initTimePicker = () => {
   flatpickr('#add_time', {
     'locale': 'zh_tw',
-    'minDate': new Date()
+    'minDate': today
   })
   flatpickr('#notification_time', {
     'locale': 'zh_tw',
+    'minDate': today,
     'enableTime': true
   })
+}
+
+const initServiceWorker = () => {
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js')
     if ('SyncManager' in window) {
@@ -433,4 +361,11 @@ window.onload = () => {
       })
     }
   }
+}
+
+window.onload = () => {
+  initWS()
+  initNav()
+  initTimePicker()
+  initServiceWorker()
 }
