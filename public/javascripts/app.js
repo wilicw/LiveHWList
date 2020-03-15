@@ -26,10 +26,13 @@ let yyyy = today.getFullYear()
 today = new Date(`${yyyy}-${mm}-${dd} 00:00:00`).getTime()
 let range = [today, today+86400000]
 
-const dateToString = (time) => {
+const dateToString = (time, weekday=false) => {
   let date = new Date(time)
-  date = `${date.getMonth()+1}/${date.getDate()}`
-  return date
+  if (weekday) {
+    let formater = new Intl.DateTimeFormat('zh', {weekday: "long"}).format.bind()
+    return `${date.getMonth()+1}/${date.getDate()} ${formater(date)}`
+  }
+  return `${date.getMonth()+1}/${date.getDate()}`
 }
 
 const getTagsByid = (id) => {
@@ -195,7 +198,7 @@ const render = () => {
   let dateTitle = ""
   filtered.map(item => {
     addItemInDB(item)
-    dT = dateToString(item.time)
+    dT = dateToString(item.time, true)
     if (dT !== dateTitle) {
       let titleElem = document.createElement('p')
       titleElem.classList.add('dateTitle')
