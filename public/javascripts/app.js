@@ -144,9 +144,12 @@ const setNotification = async (id) => {
     item = item[0]
     let time = document.getElementById('notification_time').value
     if (time) {
-      item.time = new Date(time).getTime()
+      let notification_object = {
+        time: new Date(time).getTime(),
+        title: `${getSubjectByid(item.subject)} ${(getTagsByid(item.tags).name)} ${item.title}`
+      }
       notification_data = notification_data.filter(i => i.id !== id)
-      notification_data.push(item)
+      notification_data.push(notification_object)
       localforage.setItem('notification', notification_data).then(value => {
         console.log(value)
         document.getElementById('notification_card').classList.remove('active')

@@ -32,11 +32,12 @@ let notification_alert_check = () => {
                 if (value) {
                     let reload = value
                     value.map(item => {
+                        console.log(item)
                         let now = new Date().getTime()
-                        console.log("now", now)
-                        console.log("Task", item.time)
                         if (item.time <= now) {
-                            self.registration.showNotification(item.title)
+                            self.registration.showNotification(item.title, {
+                                body: '記的寫(抄)作業'
+                            })
                             reload = reload.filter(i => i.id !== item.id)
                         }
                     })
