@@ -3,6 +3,10 @@ let items = []
 let tags = []
 let subject = []
 
+const socketProtocol = (window.location.protocol === 'https:' ? 'wss:' : 'ws:')
+const echoSocketUrl = `${socketProtocol}//${window.location.hostname}/echo/`
+const socket = new WebSocket(echoSocketUrl)
+
 const pad = (n) => {
   if (n < 10) {
     return `0${n}`
@@ -266,9 +270,6 @@ const loadCacheData = async () => {
 }
 
 const initWS = async () => {
-  const socketProtocol = (window.location.protocol === 'https:' ? 'wss:' : 'ws:')
-  const echoSocketUrl = `${socketProtocol}//${window.location.hostname}/echo/`
-  const socket = new WebSocket(echoSocketUrl)
   await loadCacheData()
   socket.onopen = event => {
     socket.send(JSON.stringify({methods: 'gettags'}))
