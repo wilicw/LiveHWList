@@ -8,11 +8,7 @@ const echoSocketUrl = `${socketProtocol}//${window.location.hostname}/echo/`
 let socket
 
 const pad = (n) => {
-  if (n < 10) {
-    return `0${n}`
-  } else {
-    return n
-  }
+  return n < 10 ? `0${n}` : n
 }
 
 let today = new Date()
