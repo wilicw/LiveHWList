@@ -4,8 +4,8 @@ let tags = []
 let subject = []
 
 const socketProtocol = (window.location.protocol === 'https:' ? 'wss:' : 'ws:')
-const echoSocketUrl = `${socketProtocol}//${window.location.hostname}:4000/echo/`
-let socket = new WebSocket(echoSocketUrl)
+const echoSocketUrl = `${socketProtocol}//${window.location.hostname}/echo/`
+let socket
 
 const pad = (n) => {
   if (n < 10) {
@@ -84,13 +84,13 @@ const generateItem = (id, title, time, subject, tags) => {
     icon.setAttribute('data-inline', 'false')
     icons_group.appendChild(icon)
 
-    icons_group.addEventListener('click', e => {
+    icons_group.addEventListener('click', async (e) => {
       if (window.Notification) {
-        Notification.requestPermission(status => {
-          console.log('Status of the request:', status)
-        })
+        let status = await Notification.requestPermission()
+        if (status === 'granted') {
+          setNotification(id)
+        }
       }
-      setNotification(id)
     })
     card.append(icons_group)
   }
@@ -351,6 +351,7 @@ const initServiceWorker = () => {
 }
 
 window.onload = async () => {
+  socket =  await new WebSocket(echoSocketUrl)
   await initWS()
   initNav()
   initTimePicker()
