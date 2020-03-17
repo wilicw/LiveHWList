@@ -105,12 +105,13 @@ const setIcon = (id, icon_name) => {
   icon_group.appendChild(icon)
 }
 
+const resetElement = name => {
+  let el = document.getElementById(name),
+    elClone = el.cloneNode(true)
+  el.parentNode.replaceChild(elClone, el)
+}
+
 const settingCard = async (id) => {
-  let reset = name => {
-    let el = document.getElementById(name),
-      elClone = el.cloneNode(true)
-    el.parentNode.replaceChild(elClone, el)
-  }
   document.getElementById('notification_time')._flatpickr.clear()
 
   // load exist data
@@ -125,6 +126,9 @@ const settingCard = async (id) => {
   document.getElementById('notification_card').classList.add('active')
   document.getElementById('notification_card').addEventListener('click', e => {
     document.getElementById('notification_card').classList.remove('active')
+    resetElement('clear_notification')
+    resetElement('setting_button')
+    resetElement('delete_btn')
   })
   document.getElementById('setting_card').addEventListener('click', e => {
     e.stopPropagation()
@@ -132,9 +136,9 @@ const settingCard = async (id) => {
 
   // save
   document.getElementById('setting_button').addEventListener('click', e => {
-    reset('clear_notification')
-    reset('setting_button')
-    reset('delete_btn')
+    resetElement('clear_notification')
+    resetElement('setting_button')
+    resetElement('delete_btn')
     console.log(`add notification ${id}`)
     let item = items.filter(i => {
       return i.id == id
@@ -159,9 +163,9 @@ const settingCard = async (id) => {
 
   //clear
   document.getElementById('clear_notification').addEventListener('click', e => {
-    reset('clear_notification')
-    reset('setting_button')
-    reset('delete_btn')
+    resetElement('clear_notification')
+    resetElement('setting_button')
+    resetElement('delete_btn')
     console.log(`remove notification ${id}`)
     notification_data = notification_data.filter(i => i.id !== id)
     localforage.setItem('notification', notification_data).then(value => {
@@ -173,9 +177,9 @@ const settingCard = async (id) => {
 
   //delete item
   document.getElementById('delete_btn').addEventListener('click', e => {
-    reset('clear_notification')
-    reset('setting_button')
-    reset('delete_btn')
+    resetElement('clear_notification')
+    resetElement('setting_button')
+    resetElement('delete_btn')
     let key = prompt("輸入通關密語", "")
     socket.send(JSON.stringify({
       methods: 'delete',
@@ -316,7 +320,6 @@ const initWS = async () => {
     } else if (event.type === 'addSuccess') {
       alert('加入成功')
       document.getElementById('add_title').value = ''
-      document.getElementById('add_time').value = ''
       document.getElementById('add_key').value = ''
     } else if (event.type === 'delSuccess') {
       alert('刪除成功')
