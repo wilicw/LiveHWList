@@ -4,8 +4,8 @@ let tags = []
 let subject = []
 
 const socketProtocol = (window.location.protocol === 'https:' ? 'wss:' : 'ws:')
-const echoSocketUrl = `${socketProtocol}//${window.location.hostname}/echo/`
-const socket = new WebSocket(echoSocketUrl)
+const echoSocketUrl = `${socketProtocol}//${window.location.hostname}:4000/echo/`
+let socket = new WebSocket(echoSocketUrl)
 
 const pad = (n) => {
   if (n < 10) {
@@ -100,6 +100,7 @@ const generateItem = (id, title, time, subject, tags) => {
 
 const setIcon = (id, icon_name) => {
   let icon_group = document.getElementById(`icon${id}`)
+  if (!icon_group) return
   icon_group.innerHTML = ''
   let icon = document.createElement('span')
   icon.classList.add('iconify')
@@ -145,6 +146,7 @@ const setNotification = async (id) => {
     let time = document.getElementById('notification_time').value
     if (time) {
       let notification_object = {
+        id: item.id,
         time: new Date(time).getTime(),
         title: `${getSubjectByid(item.subject)} ${(getTagsByid(item.tags).name)} ${item.title}`
       }
@@ -269,7 +271,6 @@ const loadCacheData = async () => {
   tags = await localforage.getItem('tags') || []
   subject = await localforage.getItem('subject') || []
   items = await localforage.getItem('lists') || []
-  render()
 }
 
 const initWS = async () => {
@@ -300,10 +301,11 @@ const initWS = async () => {
       alert('加入成功')
       document.getElementById('add_title').value = ''
       document.getElementById('add_time').value = ''
-      document.getElementById('add_subject').value = ''
       document.getElementById('add_key').value = ''
-      document.getElementById('add_tags').value = ''
     }
+  }
+  socket.onerror = event => {
+    console.log(event)
   }
 }
 
@@ -313,6 +315,7 @@ const addItem = () => {
   const subject = document.getElementById('add_subject').value
   const key = document.getElementById('add_key').value
   const tags = document.getElementById('add_tags').value
+  console.log(title)
   socket.send(JSON.stringify({
       methods: 'add',
       title: title,
@@ -349,7 +352,6 @@ const initServiceWorker = () => {
 
 window.onload = async () => {
   await initWS()
-  render()
   initNav()
   initTimePicker()
   initServiceWorker()
