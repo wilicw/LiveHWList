@@ -27,14 +27,14 @@ wss.on('connection', connection = ws => {
   ws.on('message', incoming = message => {
     let data = JSON.parse(message)
     console.log(data)
-    if (data.methods === "add") {
+    if (data.methods === 'add') {
       const title = data.title
       const time = new Date(data.time).getTime()
       const key = String(md5(data.key))
       const subject = data.subject
-      const tags = data.tags.join(",")
+      const tags = data.tags.join(',')
       db.serialize(() => {
-        db.each(`SELECT * from admins where key LIKE "${key}"`, (err, row) => {
+        db.each(`SELECT * from admins where key LIKE '${key}'`, (err, row) => {
           if (err) {
             return console.error(err)
           }
@@ -42,11 +42,11 @@ wss.on('connection', connection = ws => {
           console.log(admin)
           let stmt = db.prepare(`INSERT INTO lists ('title', 'subject', 'tags', 'time', 'admin') VALUES (?,?,?,?,?)`)
           stmt.run(title, subject, tags, time, admin)
-          ws.send(JSON.stringify({type: "addSuccess"}))
+          ws.send(JSON.stringify({type: 'addSuccess'}))
           wss.clients.forEach(function each(client) {
             if (client.readyState === WebSocket.OPEN) {
               let data = {
-                type: "update",
+                type: 'update',
                 data: {
                   title: title,
                   time: time,
@@ -60,7 +60,7 @@ wss.on('connection', connection = ws => {
           })
         })
       })
-    } else if (data.methods === "get") {
+    } else if (data.methods === 'get') {
       const pad = (n) => {
         if (n < 10) {
           return `0${n}`
@@ -74,27 +74,27 @@ wss.on('connection', connection = ws => {
       db.serialize(() => {
         db.all(`SELECT * from lists where time >= ${time}`, (err, rows) => {
           let response = {
-            type: "all",
+            type: 'all',
             data: rows
           }
           ws.send(JSON.stringify(response))
         })
       })
-    } else if (data.methods === "gettags") {
+    } else if (data.methods === 'gettags') {
       db.serialize(() => {
         db.all(`SELECT * from tags`, (err, rows) => {
           let response = {
-            type: "tags",
+            type: 'tags',
             data: rows
           }
           ws.send(JSON.stringify(response))
         })
       })
-    } else if (data.methods === "getsubject") {
+    } else if (data.methods === 'getsubject') {
       db.serialize(() => {
         db.all(`SELECT * from subject`, (err, rows) => {
           let response = {
-            type: "subject",
+            type: 'subject',
             data: rows
           }
           ws.send(JSON.stringify(response))
