@@ -4,7 +4,7 @@ let tags = []
 let subject = []
 
 const socketProtocol = (window.location.protocol === 'https:' ? 'wss:' : 'ws:')
-const echoSocketUrl = `${socketProtocol}//${window.location.hostname}/echo/`
+const echoSocketUrl = `${socketProtocol}//${window.location.hostname}:4000/echo/`
 const socket = new WebSocket(echoSocketUrl)
 
 const pad = (n) => {
@@ -296,6 +296,13 @@ const initWS = async () => {
     } else if (event.type === 'subject') {
       subject = event.data
       localforage.setItem('subject', subject)
+    } else if (event.type === 'addSuccess') {
+      alert('加入成功')
+      document.getElementById('add_title').value = ''
+      document.getElementById('add_time').value = ''
+      document.getElementById('add_subject').value = ''
+      document.getElementById('add_key').value = ''
+      document.getElementById('add_tags').value = ''
     }
   }
 }
@@ -306,8 +313,7 @@ const addItem = () => {
   const subject = document.getElementById('add_subject').value
   const key = document.getElementById('add_key').value
   const tags = document.getElementById('add_tags').value
-  socket.send(JSON.stringify(
-    {
+  socket.send(JSON.stringify({
       methods: 'add',
       title: title,
       time: time,
