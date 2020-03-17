@@ -100,6 +100,30 @@ wss.on('connection', connection = ws => {
           ws.send(JSON.stringify(response))
         })
       })
+    } else if (data.methods === 'delete') {
+      const id = data.id 
+      const key = String(md5(data.key))
+      db.serialize(() => {
+        db.each(`SELECT * from admins where key LIKE '${key}'`, (err, row) => {
+          if (err) {
+            return console.error(err)
+          }
+          let stmt = db.prepare(`DELETE from lists where id = ?`)
+          stmt.run(id)
+          ws.send(JSON.stringify({type: 'delSuccess'}))
+          wss.clients.forEach(function each(client) {
+            if (client.readyState === WebSocket.OPEN) {
+              let data = {
+                type: 'delete',
+                data: {
+                  id: id
+                }
+              }
+              client.send(JSON.stringify(data))
+            }
+          })
+        })
+      })
     }
   })
 })

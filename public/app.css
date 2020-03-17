@@ -217,3 +217,12 @@ button {
   max-width: 80%;
   overflow: hidden;
 }
+
+#delete_btn {
+  float: left;
+  display: inline;
+  padding-top: 1.5em;
+  padding-left: 1em;
+  color: #AAAAAA;
+  font-size: 90%;
+}

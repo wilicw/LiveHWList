@@ -4,7 +4,7 @@ let tags = []
 let subject = []
 
 const socketProtocol = (window.location.protocol === 'https:' ? 'wss:' : 'ws:')
-const echoSocketUrl = `${socketProtocol}//${window.location.hostname}/echo/`
+const echoSocketUrl = `${socketProtocol}//${window.location.hostname}:4000/echo/`
 let socket
 
 const pad = (n) => {
@@ -84,7 +84,7 @@ const generateItem = (id, title, time, subject, tags) => {
       if (window.Notification) {
         let status = await Notification.requestPermission()
         if (status === 'granted') {
-          setNotification(id)
+          settingCard(id)
         }
       }
     })
@@ -105,7 +105,7 @@ const setIcon = (id, icon_name) => {
   icon_group.appendChild(icon)
 }
 
-const setNotification = async (id) => {
+const settingCard = async (id) => {
   let reset = name => {
     let el = document.getElementById(name),
       elClone = el.cloneNode(true)
@@ -134,6 +134,7 @@ const setNotification = async (id) => {
   document.getElementById('setting_button').addEventListener('click', e => {
     reset('clear_notification')
     reset('setting_button')
+    reset('delete_btn')
     console.log(`add notification ${id}`)
     let item = items.filter(i => {
       return i.id == id
@@ -160,6 +161,7 @@ const setNotification = async (id) => {
   document.getElementById('clear_notification').addEventListener('click', e => {
     reset('clear_notification')
     reset('setting_button')
+    reset('delete_btn')
     console.log(`remove notification ${id}`)
     notification_data = notification_data.filter(i => i.id !== id)
     localforage.setItem('notification', notification_data).then(value => {
@@ -167,6 +169,19 @@ const setNotification = async (id) => {
       document.getElementById('notification_card').classList.remove('active')
       setIcon(id, 'mdi-bell-ring-outline')
     })
+  })
+
+  //delete item
+  document.getElementById('delete_btn').addEventListener('click', e => {
+    reset('clear_notification')
+    reset('setting_button')
+    reset('delete_btn')
+    let key = prompt("輸入通關密語", "")
+    socket.send(JSON.stringify({
+      methods: 'delete',
+      id: id,
+      key: key
+    }))
   })
 }
 
@@ -287,6 +302,11 @@ const initWS = async () => {
     } else if (event.type === 'update') {
       items.push(event.data)
       render()
+    } else if (event.type === 'delete') {
+      items = items.filter(i => i.id !== event.data.id)
+      console.log(items)      
+      localforage.setItem('lists', items)
+      render()
     } else if (event.type === 'tags') {
       tags = event.data
       localforage.setItem('tags', tags)
@@ -298,6 +318,9 @@ const initWS = async () => {
       document.getElementById('add_title').value = ''
       document.getElementById('add_time').value = ''
       document.getElementById('add_key').value = ''
+    } else if (event.type === 'delSuccess') {
+      alert('刪除成功')
+      document.getElementById('notification_card').classList.remove('active')
     }
   }
   socket.onerror = event => {
@@ -313,14 +336,13 @@ const addItem = () => {
   const tags = document.getElementById('add_tags').value
   console.log(title)
   socket.send(JSON.stringify({
-      methods: 'add',
-      title: title,
-      time: time,
-      subject: subject,
-      tags: [tags],
-      key: key
-    }
-  ))
+    methods: 'add',
+    title: title,
+    time: time,
+    subject: subject,
+    tags: [tags],
+    key: key
+  }))
 }
 
 const initTimePicker = () => {
