@@ -378,3 +378,16 @@ window.onload = async () => {
   initTimePicker()
   initServiceWorker()
 }
+
+let firebaseConfig = {
+  apiKey: "AIzaSyCitYkK070B2bSyHAv-e_NStP0l8t39i8g",
+  authDomain: "daanhw.firebaseapp.com",
+  databaseURL: "https://daanhw.firebaseio.com",
+  projectId: "daanhw",
+  storageBucket: "daanhw.appspot.com",
+  messagingSenderId: "9727634125",
+  appId: "1:9727634125:web:9f6b9c2c6a63ddd2e8d784",
+  measurementId: "G-XQZKCYS18J"
+}
+firebase.initializeApp(firebaseConfig)
+firebase.analytics()
