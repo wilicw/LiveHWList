@@ -198,6 +198,9 @@ const render = () => {
     max = 9999999999999
   }
   items = items.sort((a, b) => {
+    return a.tags - b.tags
+  })
+  items = items.sort((a, b) => {
     return a.time - b.time
   })
   let filtered = items.filter(item => {
