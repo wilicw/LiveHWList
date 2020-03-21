@@ -14,6 +14,7 @@ const pad = (n) => {
 let today = new Date()
 today = new Date(`${today.getFullYear()}-${pad(today.getMonth()+1)}-${pad(today.getDate())} 00:00:00`).getTime()
 let range = [today, today+86400000]
+let weekday = new Date(today).getDay()
 
 const dateToString = (time, weekday=false) => {
   let date = new Date(time)
@@ -229,57 +230,65 @@ const render = () => {
   })
 }
 
-const initNav = () => {
-  const nav = document.getElementById('nav')
-  let inactive = () => {
-    Calendar.classList.add('active')
-    document.getElementById('add').classList.remove('active')
-    Array.from(nav.children).forEach(elem => {
-      elem.classList.remove('active')
-    })
+const route = {
+  go: (link) => {
+    location.hash = `#/${link}`
+    switch (link) {
+      case 'next':
+        if (weekday > 5) {
+          range = [today+(8-weekday)*86400000, today+(9-weekday)*86400000]
+        } else {
+          range = [today+86400000, today+2*86400000]
+        }
+        Calendar.innerHTML = ''
+        render()
+        break
+      case 'all':
+        Calendar.innerHTML = ''
+        range = [today, 0]
+        render()
+        break
+      case 'add':
+        Calendar.classList.remove('active')
+        document.getElementById('add').classList.add('active')
+        document.getElementById('add_subject').innerHTML = ''
+        subject.map(s => {
+          let option = document.createElement('option')
+          option.value = s.id
+          option.innerText = s.name
+          document.getElementById('add_subject').appendChild(option)
+        })
+
+        document.getElementById('add_tags').innerHTML = ''
+        tags.map(tag => {
+          let option = document.createElement('option')
+          option.value = tag.id
+          option.innerText = tag.name
+          document.getElementById('add_tags').appendChild(option)
+        })
+        break
+      default:
+        location.hash = '#/today'
+        range = [today, today+86400000]
+        render()
+        break
+    }
   }
-  document.getElementById('today').addEventListener('click', e => {
-    inactive()
-    e.srcElement.classList.add('active')
-    range = [today, today+86400000]
-    render()
-  })
+}
 
-  document.getElementById('tomorrow').addEventListener('click', e => {
-    inactive()
-    e.srcElement.classList.add('active')
-    Calendar.innerHTML = ''
-    range = [today+86400000, today+2*86400000]
-    render()
+let navInactive = () => {
+  const nav = document.getElementById('nav')
+  Calendar.classList.add('active')
+  document.getElementById('add').classList.remove('active')
+  Array.from(nav.children).forEach(elem => {
+    elem.classList.remove('active')
   })
+}
 
-  document.getElementById('all').addEventListener('click', e => {
-    inactive()
-    e.srcElement.classList.add('active')
-    Calendar.innerHTML = ''
-    range = [today, 0]
-    render()
-  })
-
-  document.getElementById('show_add').addEventListener('click', () => {
-    Calendar.classList.remove('active')
-    document.getElementById('add').classList.add('active')
-    document.getElementById('add_subject').innerHTML = ''
-    subject.map(s => {
-      let option = document.createElement('option')
-      option.value = s.id
-      option.innerText = s.name
-      document.getElementById('add_subject').appendChild(option)
-    })
-
-    document.getElementById('add_tags').innerHTML = ''
-    tags.map(tag => {
-      let option = document.createElement('option')
-      option.value = tag.id
-      option.innerText = tag.name
-      document.getElementById('add_tags').appendChild(option)
-    })
-  })
+const initNav = () => {
+  if (weekday > 5) {
+    document.getElementById('next').innerText = "下週"
+  }
 }
 
 const loadCacheData = async () => {
@@ -288,8 +297,8 @@ const loadCacheData = async () => {
   items = await localforage.getItem('lists') || []
 }
 
-const initWS = async () => {
-  await loadCacheData()
+const initWS = () => {
+  loadCacheData()
   socket.onopen = event => {
     socket.send(JSON.stringify({methods: 'gettags'}))
     socket.send(JSON.stringify({methods: 'getsubject'}))
@@ -371,10 +380,27 @@ const initServiceWorker = () => {
   }
 }
 
+const initRoute = () => {
+  changeRoute = () => {
+    let link = location.hash.split('#/')[1]
+    try {
+      navInactive()
+      document.getElementById(link).classList.add('active')
+    } catch (error) {
+      console.log(error)
+      // nothing
+    }
+    route.go(link)
+  }
+  changeRoute()
+  window.onhashchange = changeRoute
+}
+
 window.onload = async () => {
   socket =  await new WebSocket(echoSocketUrl)
-  await initWS()
+  initWS()
   initNav()
+  initRoute()
   initTimePicker()
   initServiceWorker()
 }
