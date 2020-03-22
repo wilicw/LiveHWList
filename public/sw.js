@@ -1,20 +1,29 @@
 importScripts('https://storage.googleapis.com/workbox-cdn/releases/3.0.0/workbox-sw.js')
 importScripts('https://cdn.jsdelivr.net/npm/localforage@1.7.3/dist/localforage.min.js')
 
+workbox.setConfig({ debug: true })
+
 workbox.precaching.precacheAndRoute([
     {url:'/index.html', revision: 1}
 ])
 
 workbox.routing.registerRoute(
     /.*\.(?:js|css)/,
-    workbox.strategies.staleWhileRevalidate({
+    new workbox.strategies.NetworkFirst({
         cacheName: 'workbox:css',
     })
 )
 
 workbox.routing.registerRoute(
+    /.*\.ttf/,
+    new workbox.strategies.CacheFirst({
+      cacheName: 'wworkbox:font',
+    })
+)
+
+workbox.routing.registerRoute(
     /.*\.png/,
-    workbox.strategies.cacheFirst({
+    new workbox.strategies.CacheFirst({
         cacheName: 'workbox:image',
         plugins: [
             new workbox.expiration.Plugin({
