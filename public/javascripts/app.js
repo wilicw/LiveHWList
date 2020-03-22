@@ -309,6 +309,7 @@ const initWS = () => {
     console.log('Success')
   }
   socket.onmessage = msg => {
+    initRoute()
     event = JSON.parse(msg.data)
     console.log(event)
     if (event.type === 'all') {

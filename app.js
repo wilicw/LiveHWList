@@ -23,11 +23,25 @@ const wsport = process.env.WSPORT ? process.env.WSPORT : 4000
 
 const wss = new WebSocket.Server({ port: wsport })
 
+const checkData = (data, keys) => {
+  let result = true
+  keys.map(key => {
+    if (data[key] == '' || data[key] == undefined || data[key] == null) {
+      result = false
+    }
+  })
+  return result
+}
+
 wss.on('connection', connection = ws => {
   ws.on('message', incoming = message => {
     let data = JSON.parse(message)
     console.log(data)
     if (data.methods === 'add') {
+      if (!checkData(data, ['title', 'time', 'subject', 'tags', 'key'])) {
+        ws.send(87)
+        return
+      }
       const title = data.title
       const time = new Date(data.time).getTime()
       const key = String(md5(data.key))
@@ -101,6 +115,10 @@ wss.on('connection', connection = ws => {
         })
       })
     } else if (data.methods === 'delete') {
+      if (!checkData(data, ['key', 'id'])) {
+        ws.send(87)
+        return
+      }
       const id = data.id 
       const key = String(md5(data.key))
       db.serialize(() => {
