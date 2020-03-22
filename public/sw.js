@@ -4,7 +4,7 @@ importScripts('https://cdn.jsdelivr.net/npm/localforage@1.7.3/dist/localforage.m
 workbox.setConfig({ debug: true })
 
 workbox.precaching.precacheAndRoute([
-    {url:'/index.html', revision: 1}
+    {url:'/index.html', revision: 5}
 ])
 
 workbox.routing.registerRoute(
